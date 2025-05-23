@@ -20,6 +20,8 @@ A standard [Universal Tool](https://github.com/blueraai/universal-intelligence) 
 
 > 🤖 Discoverable Websites and APIs, for AI Agents interactions. [Bluera Inc.](https://bluera.ai)
 
+## Get Started
+
 Learn more about how to support `AWP`, by clicking the most appropriate option for you:
 <details>
 <summary><strong style="display: inline; cursor: pointer; margin: 0; padding: 0;">I make websites or APIs, what do I need to do?</strong></summary>
