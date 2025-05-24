@@ -147,7 +147,7 @@ With `AWP`, this information is now declared in the HTML itself, through standar
         <button
           ai-description="Confirmation button to proceed with booking a flight"
           ai-interactions="click: proceed; hover: diplay additonal information about possible flights;"
-          ai-prerequisite-click="<input-ai-ref>: input destination;"
+          ai-prerequisite-click="<input-ai-ref>: input the destination;"
           ai-next-click="list of available flights; book a flight; login;"
           disabled>
           ->
@@ -251,7 +251,7 @@ const apiDoc = await awp.parseApi({ url })
 
 | Method | Parameters | Return Type | Description |
 |--------|------------|-------------|-------------|
-| `parseHtml` | • `payload.html: string`: HTML page to parse<br>• `payload.format?: string = "YAML"`: Output format | `Promise<any>` | Parses all AWP `ai-*` parameters on the page and returns a documentation in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that web page |
+| `parseHtml` | • `payload.html: string`: HTML page to parse<br>• `payload.format?: string = "YAML"`: Output format | `Promise<any>` | Parses all AWP `ai-*` and accessibility attributes on the page and returns a documentation in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that web page |
 | `parseApi` | • `payload.url: string`: URL of the API to parse<br>• `payload.authorization?: string`: Authentication header if required<br>• `payload.format?: string = "YAML"`: Output format | `Promise<any>` | Calls the standard `/ai-handshake` endpoint of that API and returns an [OpenAPI](https://swagger.io/specification/) compliant documentation of that API in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that API |
 
 #### As [Universal Tool](https://github.com/blueraai/universal-intelligence)
@@ -270,7 +270,7 @@ const [apiDoc, apiLogs] = awp.parseApi({ url })
 | Method | Parameters | Return Type | Description |
 |--------|------------|-------------|-------------|
 | `constructor` | • `payload.verbose?: boolean \| string = "DEFAULT"`: Enable/Disable logs, or set a specific log level | `void` | Initialize a Universal Tool |
-| `parseHtml` | • `payload.html: string`: HTML page to parse<br>• `payload.format?: string = "YAML"`: Output format | `Promise<[any, Record<string, any>]>` | Parses all AWP `ai-*` parameters on the page and returns a documentation in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that web page |
+| `parseHtml` | • `payload.html: string`: HTML page to parse<br>• `payload.format?: string = "YAML"`: Output format | `Promise<[any, Record<string, any>]>` | Parses all AWP `ai-*` and accessibility attributes on the page and returns a documentation in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that web page |
 | `parseApi` | • `payload.url: string`: URL of the API to parse<br>• `payload.authorization?: string`: Authentication header if required<br>• `payload.format?: string = "YAML"`: Output format | `Promise<[any, Record<string, any>]>` | Calls the standard `/ai-handshake` endpoint of that API and returns an [OpenAPI](https://swagger.io/specification/) compliant documentation of that API in the requested format (YAML, JSON), usable by any AI agent to reliably understand and interact with that API |
 | `(class).contract` | None | `Contract` | Tool description and interface specification |
 | `(class).requirements` | None | `Requirement[]` | Tool configuration requirements |
