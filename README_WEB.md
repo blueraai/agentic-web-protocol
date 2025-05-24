@@ -394,6 +394,15 @@ Example available [here](https://editor.swagger.io).
 
 > **Tip**: Tools like [Swagger](https://swagger.io) can automatically generate a [OpenAPI](https://swagger.io/specification/) compliant documentation for your API which you may serve at `/ai-handshake`. They usually also provide no-code UIs to display and interact wich that documentation on the web (eg. [Swagger UI](https://editor.swagger.io)).
 
+#### Playground
+
+A ready-made playground is available to help familiarize yourself with the AWP protocols and tools.
+
+```sh
+npm install && npm run build && python playground/web/server.py 
+# Access playground in your browser: http://localhost:8000/playground/web/
+```
+
 ### Cross-Platform Support
 
 ![lng_icon](https://fasplnlepuuumfjocrsu.supabase.co/storage/v1/object/public/web-assets//icons8-python-16.png) ![lng_icon](https://fasplnlepuuumfjocrsu.supabase.co/storage/v1/object/public/web-assets//icons8-javascript-16.png) The `AWP` tool can be used across **all platforms** (cloud, desktop, web, mobile).
