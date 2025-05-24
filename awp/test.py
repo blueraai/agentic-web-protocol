@@ -112,13 +112,13 @@ class TestLib(unittest.TestCase):
         # Test input element
         input_elem = form_elem["contains"][2]
         self.assertEqual(input_elem["description"], "Form input where to enter the destination")
-        self.assertIn("parameters", input_elem)
-        self.assertEqual(input_elem["parameters"]["type"], "text")
-        self.assertEqual(input_elem["parameters"]["name"], "destination")
-        self.assertEqual(input_elem["parameters"]["required"], True)
-        # Verify numeric parameters are actual numbers
-        self.assertEqual(input_elem["parameters"]["minlength"], 3)
-        self.assertEqual(input_elem["parameters"]["maxlength"], 30)
+        self.assertIn("attributes", input_elem)
+        self.assertEqual(input_elem["attributes"]["type"], "text")
+        self.assertEqual(input_elem["attributes"]["name"], "destination")
+        self.assertEqual(input_elem["attributes"]["required"], True)
+        # Verify numeric attributes are actual numbers
+        self.assertEqual(input_elem["attributes"]["minlength"], 3)
+        self.assertEqual(input_elem["attributes"]["maxlength"], 30)
         self.assertTrue(input_elem["selector"])
 
         # Test input interactions
@@ -202,6 +202,145 @@ class TestLib(unittest.TestCase):
         self.assertTrue(div_elem["selector"])
         # Since the input has no ai- attributes, it should not be included
         self.assertNotIn("contains", div_elem)
+
+        print(f"\n{GREEN}✓ Test passed successfully{RESET}")
+
+    def test_parse_html_attributes(self):
+        """Test parse_html function with name, role, and aria-* attributes"""
+        print(f"\n{BLUE}Test: parse_html_attributes{RESET}")
+        print("=" * 50)
+        print("\nInput HTML:")
+        print("-" * 50)
+        html = """
+        <div>
+          <button name="submit-btn" role="button" aria-label="Submit form" aria-disabled="true">
+            Submit
+          </button>
+          <input type="text" name="username" role="textbox" aria-required="true" aria-placeholder="Enter username" />
+          <div role="alert" aria-live="polite">
+            Error message
+          </div>
+        </div>
+        """
+        print(html)
+
+        result = parse_html(html, format="YAML")
+        parsed = yaml.safe_load(result)
+
+        print("\nOutput YAML:")
+        print("-" * 50)
+        print(yaml.dump(parsed, sort_keys=False))
+
+        # Test basic structure
+        self.assertIn("elements", parsed)
+        self.assertEqual(len(parsed["elements"]), 3)  # Should include all elements with name/role/aria-*
+
+        # Test button element
+        button_elem = next(elem for elem in parsed["elements"] if "button" in elem["selector"] and "submit-btn" in elem["selector"])
+        self.assertIn("attributes", button_elem)
+        self.assertEqual(button_elem["attributes"]["name"], "submit-btn")
+        self.assertEqual(button_elem["attributes"]["role"], "button")
+        self.assertEqual(button_elem["attributes"]["aria-label"], "Submit form")
+        self.assertEqual(button_elem["attributes"]["aria-disabled"], "true")
+
+        # Test input element
+        input_elem = next(elem for elem in parsed["elements"] if "input" in elem["selector"] and "username" in elem["selector"])
+        self.assertIn("attributes", input_elem)
+        self.assertEqual(input_elem["attributes"]["name"], "username")
+        self.assertEqual(input_elem["attributes"]["role"], "textbox")
+        self.assertEqual(input_elem["attributes"]["aria-required"], "true")
+        self.assertEqual(input_elem["attributes"]["aria-placeholder"], "Enter username")
+        self.assertEqual(input_elem["attributes"]["type"], "text")
+
+        # Test div element
+        div_elem = next(elem for elem in parsed["elements"] if "div" in elem["selector"] and "alert" in elem["selector"])
+        self.assertIn("attributes", div_elem)
+        self.assertEqual(div_elem["attributes"]["role"], "alert")
+        self.assertEqual(div_elem["attributes"]["aria-live"], "polite")
+
+        print(f"\n{GREEN}✓ Test passed successfully{RESET}")
+
+    def test_parse_html_state(self):
+        """Test parse_html function with ai-state attribute"""
+        print(f"\n{BLUE}Test: parse_html_state{RESET}")
+        print("=" * 50)
+        print("\nInput HTML:")
+        print("-" * 50)
+        html = """
+        <div>
+          <button ai-state="disabled" disabled>Submit</button>
+          <input type="text" ai-state="focused" />
+          <div ai-state="loading">Loading...</div>
+        </div>
+        """
+        print(html)
+
+        result = parse_html(html, format="YAML")
+        parsed = yaml.safe_load(result)
+
+        print("\nOutput YAML:")
+        print("-" * 50)
+        print(yaml.dump(parsed, sort_keys=False))
+
+        # Test basic structure
+        self.assertIn("elements", parsed)
+        self.assertEqual(len(parsed["elements"]), 3)  # Should include all elements with ai-state
+
+        # Test button element
+        button_elem = next(elem for elem in parsed["elements"] if "button" in elem["selector"])
+        self.assertEqual(button_elem["state"], "disabled")
+
+        # Test input element
+        input_elem = next(elem for elem in parsed["elements"] if "input" in elem["selector"])
+        self.assertEqual(input_elem["state"], "focused")
+
+        # Test div element
+        div_elem = next(elem for elem in parsed["elements"] if "div" in elem["selector"] and elem.get("content") == "Loading...")
+        self.assertEqual(div_elem["state"], "loading")
+
+        print(f"\n{GREEN}✓ Test passed successfully{RESET}")
+
+    def test_parse_html_alt(self):
+        """Test parse_html function with alt attribute"""
+        print(f"\n{BLUE}Test: parse_html_alt{RESET}")
+        print("=" * 50)
+        print("\nInput HTML:")
+        print("-" * 50)
+        html = """
+        <div>
+          <img src="logo.png" alt="Company Logo" />
+          <input type="image" src="submit.png" alt="Submit Form" />
+          <button alt="Help Button">Help</button>
+        </div>
+        """
+        print(html)
+
+        result = parse_html(html, format="YAML")
+        parsed = yaml.safe_load(result)
+
+        print("\nOutput YAML:")
+        print("-" * 50)
+        print(yaml.dump(parsed, sort_keys=False))
+
+        # Test basic structure
+        self.assertIn("elements", parsed)
+        self.assertEqual(len(parsed["elements"]), 3)  # Should include all elements with alt
+
+        # Test img element
+        img_elem = next(elem for elem in parsed["elements"] if "img" in elem["selector"])
+        self.assertIn("attributes", img_elem)
+        self.assertEqual(img_elem["attributes"]["alt"], "Company Logo")
+
+        # Test input element
+        input_elem = next(elem for elem in parsed["elements"] if "input" in elem["selector"])
+        self.assertIn("attributes", input_elem)
+        self.assertEqual(input_elem["attributes"]["alt"], "Submit Form")
+        self.assertEqual(input_elem["attributes"]["type"], "image")
+
+        # Test button element
+        button_elem = next(elem for elem in parsed["elements"] if "button" in elem["selector"])
+        self.assertIn("attributes", button_elem)
+        self.assertEqual(button_elem["attributes"]["alt"], "Help Button")
 
         print(f"\n{GREEN}✓ Test passed successfully{RESET}")
 

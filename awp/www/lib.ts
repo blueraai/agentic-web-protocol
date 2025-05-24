@@ -28,10 +28,12 @@ interface Interaction {
 interface ParsedElement {
   selector: string;
   description?: string;
+  state?: string;
   content?: string;
   parameters?: { [key: string]: any };
   available_interactions?: Interaction[];
   contains?: ParsedElement[];
+  attributes?: { [key: string]: any };
 }
 
 interface ParsedResult {
@@ -167,6 +169,12 @@ function parseElement(element: Element, dom: JSDOM, aiRefMap: { [key: string]: s
     result.description = description
   }
 
+  // Get state if present
+  const state = element.getAttribute('ai-state')
+  if (state) {
+    result.state = state
+  }
+
   // Get nested text content if present
   const content = getNestedTextContent(element)
   if (content) {
@@ -229,62 +237,80 @@ function parseElement(element: Element, dom: JSDOM, aiRefMap: { [key: string]: s
     }
   }
 
-  // Parse parameters for input elements
+  // Parse attributes for all elements
+  const attrs: { [key: string]: any } = {}
+  
+  // Add name if present
+  const name = element.getAttribute('name')
+  if (name) {
+    attrs.name = name
+  }
+  
+  // Add role if present
+  const role = element.getAttribute('role')
+  if (role) {
+    attrs.role = role
+  }
+  
+  // Add alt if present
+  const alt = element.getAttribute('alt')
+  if (alt) {
+    attrs.alt = alt
+  }
+  
+  // Add all aria-* attributes directly
+  for (const attr of Array.from(element.attributes)) {
+    if (attr.name.startsWith('aria-')) {
+      attrs[attr.name] = attr.value
+    }
+  }
+
+  // Add input/textarea specific attributes
   if (element.tagName.toLowerCase() === 'input') {
-    const params: { [key: string]: any } = {}
     const inputAttrs = [
       'accept', 'alt', 'autocapitalize', 'capture', 'checked',
-      'disabled', 'list', 'max', 'maxlength',
-      'min', 'minlength', 'multiple', 'name', 'pattern', 'placeholder',
-      'readonly', 'required',
+      'disabled', 'list', 'max', 'maxlength', 'min', 'minlength',
+      'multiple', 'pattern', 'placeholder', 'readonly', 'required',
       'src', 'step', 'type', 'value'
     ]
 
     for (const attr of inputAttrs) {
       if (['checked', 'disabled', 'multiple', 'readonly', 'required'].includes(attr)) {
         if (element.hasAttribute(attr)) {
-          params[attr] = true
+          attrs[attr] = true
         }
       } else {
         const value = element.getAttribute(attr)
         if (value) {
           if (['max', 'maxlength', 'min', 'minlength', 'step'].includes(attr)) {
             const numValue = parseInt(value, 10)
-            params[attr] = isNaN(numValue) ? value : numValue
+            attrs[attr] = isNaN(numValue) ? value : numValue
           } else {
-            params[attr] = value
+            attrs[attr] = value
           }
         }
       }
     }
-
-    if (Object.keys(params).length > 0) {
-      result.parameters = params
-    }
-  }
-
-  // Parse parameters for textarea elements
-  else if (element.tagName.toLowerCase() === 'textarea') {
-    const params: { [key: string]: any } = {}
-    const textareaAttrs = ['minlength', 'maxlength', 'readonly', 'required', 'name', 'placeholder']
+  } else if (element.tagName.toLowerCase() === 'textarea') {
+    const textareaAttrs = ['minlength', 'maxlength', 'readonly', 'required', 'placeholder']
 
     for (const attr of textareaAttrs) {
       const value = element.getAttribute(attr)
       if (value) {
         if (attr === 'required') {
-          params[attr] = true
+          attrs[attr] = true
         } else if (['minlength', 'maxlength'].includes(attr)) {
           const numValue = parseInt(value, 10)
-          params[attr] = isNaN(numValue) ? value : numValue
+          attrs[attr] = isNaN(numValue) ? value : numValue
         } else {
-          params[attr] = value
+          attrs[attr] = value
         }
       }
     }
+  }
 
-    if (Object.keys(params).length > 0) {
-      result.parameters = params
-    }
+  if (Object.keys(attrs).length > 0) {
+    result.attributes = attrs
   }
 
   // Recursively parse child elements
@@ -304,15 +330,34 @@ function parseElement(element: Element, dom: JSDOM, aiRefMap: { [key: string]: s
     result.contains = children
   }
 
-  // Only return elements that have ai- attributes
-  if (hasAiAttribute(element)) {
+  // Check if element has special attributes
+  const hasAiAttrs = hasAiAttribute(element)
+  const hasSpecialAttrs = element.hasAttribute('name') || 
+                         element.hasAttribute('role') || 
+                         element.hasAttribute('alt') ||
+                         Array.from(element.attributes).some(attr => attr.name.startsWith('aria-'))
+  
+  // If element has special attributes, it should be included in the output
+  if (hasSpecialAttrs) {
+    // If this element has special attributes but its parent doesn't have ai- attributes,
+    // return it as a top-level element
+    if (!hasAiAttrs && element.parentElement && !hasAiAttribute(element.parentElement)) {
+      return [result]
+    }
     return result
   }
-  // If element has no ai- attributes but has children with ai- attributes,
+  
+  // If element has ai- attributes, include it
+  if (hasAiAttrs) {
+    return result
+  }
+  
+  // If element has no special attributes but has children with special attributes,
   // return just the children
   if (children.length > 0) {
     return children
   }
+  
   return null
 }
 

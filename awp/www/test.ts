@@ -135,13 +135,13 @@ describe('parseHtml', () => {
     // Test input element
     const inputElem = formElem.contains[2]
     expect(inputElem.description).toBe("Form input where to enter the destination")
-    expect(inputElem).toHaveProperty('parameters')
-    expect(inputElem.parameters.type).toBe('text')
-    expect(inputElem.parameters.name).toBe('destination')
-    expect(inputElem.parameters.required).toBe(true)
-    // Verify numeric parameters are actual numbers
-    expect(inputElem.parameters.minlength).toBe(3)
-    expect(inputElem.parameters.maxlength).toBe(30)
+    expect(inputElem).toHaveProperty('attributes')
+    expect(inputElem.attributes.type).toBe('text')
+    expect(inputElem.attributes.name).toBe('destination')
+    expect(inputElem.attributes.required).toBe(true)
+    // Verify numeric attributes are actual numbers
+    expect(inputElem.attributes.minlength).toBe(3)
+    expect(inputElem.attributes.maxlength).toBe(30)
     expect(inputElem.selector).toBeTruthy()
 
     // Test input interactions
@@ -226,6 +226,175 @@ describe('parseHtml', () => {
     expect(divElem.selector).toBeTruthy()
     // Since the input has no ai- attributes, it should not be included
     expect(divElem).not.toHaveProperty('contains')
+
+    console.log('\n✓ Test passed successfully')
+  })
+
+  test('parse_html_attributes', async () => {
+    console.log('\nTest: parse_html_attributes')
+    console.log('='.repeat(50))
+    console.log('\nInput HTML:')
+    console.log('-'.repeat(50))
+
+    const html = `
+      <div>
+        <button name="submit-btn" role="button" aria-label="Submit form" aria-disabled="true">
+          Submit
+        </button>
+        <input type="text" name="username" role="textbox" aria-required="true" aria-placeholder="Enter username" />
+        <div role="alert" aria-live="polite">
+          Error message
+        </div>
+      </div>
+    `
+    console.log(html)
+
+    const result = await parseHtml({ html, format: "YAML" })
+    const parsed = load(result) as any
+
+    console.log('\nOutput YAML:')
+    console.log('-'.repeat(50))
+    console.log(dump(parsed))
+
+    // Test basic structure
+    expect(parsed).toHaveProperty('elements')
+    expect(parsed.elements).toHaveLength(3)  // Should include all elements with name/role/aria-*
+
+    // Test button element
+    const buttonElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('button') && elem.selector.includes('submit-btn')
+    )
+    expect(buttonElem).toBeDefined()
+    expect(buttonElem).toHaveProperty('attributes')
+    expect(buttonElem.attributes.name).toBe('submit-btn')
+    expect(buttonElem.attributes.role).toBe('button')
+    expect(buttonElem.attributes['aria-label']).toBe('Submit form')
+    expect(buttonElem.attributes['aria-disabled']).toBe('true')
+
+    // Test input element
+    const inputElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('input') && elem.selector.includes('username')
+    )
+    expect(inputElem).toBeDefined()
+    expect(inputElem).toHaveProperty('attributes')
+    expect(inputElem.attributes.name).toBe('username')
+    expect(inputElem.attributes.role).toBe('textbox')
+    expect(inputElem.attributes['aria-required']).toBe('true')
+    expect(inputElem.attributes['aria-placeholder']).toBe('Enter username')
+    expect(inputElem.attributes.type).toBe('text')
+
+    // Test div element
+    const divElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('div') && elem.attributes?.role === 'alert'
+    )
+    expect(divElem).toBeDefined()
+    expect(divElem).toHaveProperty('attributes')
+    expect(divElem.attributes.role).toBe('alert')
+    expect(divElem.attributes['aria-live']).toBe('polite')
+
+    console.log('\n✓ Test passed successfully')
+  })
+
+  test('parse_html_state', async () => {
+    console.log('\nTest: parse_html_state')
+    console.log('='.repeat(50))
+    console.log('\nInput HTML:')
+    console.log('-'.repeat(50))
+
+    const html = `
+      <div>
+        <button ai-state="disabled" disabled>Submit</button>
+        <input type="text" ai-state="focused" />
+        <div ai-state="loading">Loading...</div>
+      </div>
+    `
+    console.log(html)
+
+    const result = await parseHtml({ html, format: "YAML" })
+    const parsed = load(result) as any
+
+    console.log('\nOutput YAML:')
+    console.log('-'.repeat(50))
+    console.log(dump(parsed))
+
+    // Test basic structure
+    expect(parsed).toHaveProperty('elements')
+    expect(parsed.elements).toHaveLength(3)  // Should include all elements with ai-state
+
+    // Test button element
+    const buttonElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('button')
+    )
+    expect(buttonElem).toBeDefined()
+    expect(buttonElem.state).toBe('disabled')
+
+    // Test input element
+    const inputElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('input')
+    )
+    expect(inputElem).toBeDefined()
+    expect(inputElem.state).toBe('focused')
+
+    // Test div element
+    const divElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('div') && elem.content === 'Loading...'
+    )
+    expect(divElem).toBeDefined()
+    expect(divElem.state).toBe('loading')
+
+    console.log('\n✓ Test passed successfully')
+  })
+
+  test('parse_html_alt', async () => {
+    console.log('\nTest: parse_html_alt')
+    console.log('='.repeat(50))
+    console.log('\nInput HTML:')
+    console.log('-'.repeat(50))
+
+    const html = `
+      <div>
+        <img src="logo.png" alt="Company Logo" />
+        <input type="image" src="submit.png" alt="Submit Form" />
+        <button alt="Help Button">Help</button>
+      </div>
+    `
+    console.log(html)
+
+    const result = await parseHtml({ html, format: "YAML" })
+    const parsed = load(result) as any
+
+    console.log('\nOutput YAML:')
+    console.log('-'.repeat(50))
+    console.log(dump(parsed))
+
+    // Test basic structure
+    expect(parsed).toHaveProperty('elements')
+    expect(parsed.elements).toHaveLength(3)  // Should include all elements with alt
+
+    // Test img element
+    const imgElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('img')
+    )
+    expect(imgElem).toBeDefined()
+    expect(imgElem).toHaveProperty('attributes')
+    expect(imgElem.attributes.alt).toBe('Company Logo')
+
+    // Test input element
+    const inputElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('input')
+    )
+    expect(inputElem).toBeDefined()
+    expect(inputElem).toHaveProperty('attributes')
+    expect(inputElem.attributes.alt).toBe('Submit Form')
+    expect(inputElem.attributes.type).toBe('image')
+
+    // Test button element
+    const buttonElem = parsed.elements.find((elem: any) => 
+      elem.selector.includes('button')
+    )
+    expect(buttonElem).toBeDefined()
+    expect(buttonElem).toHaveProperty('attributes')
+    expect(buttonElem.attributes.alt).toBe('Help Button')
 
     console.log('\n✓ Test passed successfully')
   })

@@ -81,6 +81,10 @@ def parse_html(html: str, format: str = "YAML") -> Any:  # noqa: C901
             if current.name == "input" and current.get("value"):
                 part += f"[value='{current.get('value')}']"
 
+            # Add role if present
+            if current.get("role"):
+                part += f"[role='{current.get('role')}']"
+
             # If we still don't have a unique selector, add position
             if len(soup.select(" ".join([*selector_parts, part]))) > 1:
                 # Count similar elements before this one
@@ -109,6 +113,10 @@ def parse_html(html: str, format: str = "YAML") -> Any:  # noqa: C901
         # Get description if present
         if element.get("ai-description"):
             result["description"] = element.get("ai-description")
+
+        # Get state if present
+        if element.get("ai-state"):
+            result["state"] = element.get("ai-state")
 
         # Get nested text content if present
         content = get_nested_text_content(element)
@@ -150,52 +158,66 @@ def parse_html(html: str, format: str = "YAML") -> Any:  # noqa: C901
             if interactions:
                 result["available_interactions"] = interactions
 
-        # Parse parameters for input elements
+        # Parse attributes for all elements
+        attrs = {}
+
+        # Add name if present
+        if element.get("name"):
+            attrs["name"] = element.get("name")
+
+        # Add role if present
+        if element.get("role"):
+            attrs["role"] = element.get("role")
+
+        # Add alt if present
+        if element.get("alt"):
+            attrs["alt"] = element.get("alt")
+
+        # Add all aria-* attributes directly
+        for k, v in element.attrs.items():
+            if k.startswith("aria-"):
+                attrs[k] = v
+
+        # Add input/textarea specific attributes
         if element.name == "input":
-            params = {}
             # List of all possible input attributes
-            input_attrs = ["accept", "alt", "autocapitalize", "capture", "checked", "disabled", "list", "max", "maxlength", "min", "minlength", "multiple", "name", "pattern", "placeholder", "readonly", "required", "src", "step", "type", "value"]
+            input_attrs = ["accept", "alt", "autocapitalize", "capture", "checked", "disabled", "list", "max", "maxlength", "min", "minlength", "multiple", "pattern", "placeholder", "readonly", "required", "src", "step", "type", "value"]
 
             for attr in input_attrs:
                 # For boolean attributes, check if they exist rather than their value
                 if attr in ["checked", "disabled", "multiple", "readonly", "required"]:
                     if attr in element.attrs:
-                        params[attr] = True
+                        attrs[attr] = True
                 elif element.get(attr):
                     # Convert numeric attributes to numbers
                     if attr in ["max", "maxlength", "min", "minlength", "step"]:
                         try:
-                            params[attr] = int(element.get(attr))
+                            attrs[attr] = int(element.get(attr))
                         except ValueError:
-                            params[attr] = element.get(attr)
+                            attrs[attr] = element.get(attr)
                     else:
-                        params[attr] = element.get(attr)
+                        attrs[attr] = element.get(attr)
 
-            if params:
-                result["parameters"] = params
-
-        # Parse parameters for textarea elements
         elif element.name == "textarea":
-            params = {}
             # List of textarea attributes
-            textarea_attrs = ["minlength", "maxlength", "readonly", "required", "name", "placeholder"]
+            textarea_attrs = ["minlength", "maxlength", "readonly", "required", "placeholder"]
 
             for attr in textarea_attrs:
                 if element.get(attr):
                     # Convert boolean attributes to actual booleans
                     if attr == "required":
-                        params[attr] = True
+                        attrs[attr] = True
                     # Convert numeric attributes to numbers
                     elif attr in ["minlength", "maxlength"]:
                         try:
-                            params[attr] = int(element.get(attr))
+                            attrs[attr] = int(element.get(attr))
                         except ValueError:
-                            params[attr] = element.get(attr)
+                            attrs[attr] = element.get(attr)
                     else:
-                        params[attr] = element.get(attr)
+                        attrs[attr] = element.get(attr)
 
-            if params:
-                result["parameters"] = params
+        if attrs:
+            result["attributes"] = attrs
 
         # Recursively parse child elements
         children = []
@@ -212,13 +234,27 @@ def parse_html(html: str, format: str = "YAML") -> Any:  # noqa: C901
         if children:
             result["contains"] = children
 
-        # Only return elements that have ai- attributes
-        if has_ai_attribute(element):
+        # Check if element has special attributes
+        has_ai_attrs = has_ai_attribute(element)
+        has_special_attrs = element.get("name") or element.get("role") or element.get("alt") or any(attr.startswith("aria-") for attr in element.attrs)
+
+        # If element has special attributes, it should be included in the output
+        if has_special_attrs:
+            # If this element has special attributes but its parent doesn't have ai- attributes,
+            # return it as a top-level element
+            if not has_ai_attrs and element.parent and not has_ai_attribute(element.parent):
+                return [result]
             return result
-        # If element has no ai- attributes but has children with ai- attributes,
+
+        # If element has ai- attributes, include it
+        if has_ai_attrs:
+            return result
+
+        # If element has no special attributes but has children with special attributes,
         # return just the children
         if children:
             return children
+
         return None
 
     # Start parsing from the root element
@@ -226,7 +262,13 @@ def parse_html(html: str, format: str = "YAML") -> Any:  # noqa: C901
     if not root:
         return None
 
-    result = {"elements": [parse_element(root)]}
+    parsed_elements = parse_element(root)
+
+    # Handle the case where parse_element returns a list
+    if isinstance(parsed_elements, list):
+        result = {"elements": parsed_elements}
+    else:
+        result = {"elements": [parsed_elements]}
 
     # Convert to requested format
     if format.upper() == "JSON":

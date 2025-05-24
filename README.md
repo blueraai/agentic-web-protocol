@@ -64,44 +64,85 @@ Learn more about how to support `AWP`, by clicking the most appropriate option f
 
 #### Introduction
 
-Without information about what a web page is for, how it is structured, what features it provides, and how to interact with it, an AI agent has to figure out everything on its own. This is commonly done through crawlers and/or vision models aimed at parsing what the agent sees -often leading to unreliable parsing and broken/unintended interactions. 
+> ##### The Challenge of Web Interactivity for AI Agents
+> 
+> Without information about what a web page is for, how it is structured, what features it provides, and how to interact with it, an AI agent has to figure out everything on its own.
+>
+> This is commonly done through scrappers and/or vision models aimed at guessing what the agent sees.
+>
+> Websites being diverse, complex, dynamic, Javascript-heavy and often moslty made of generic `<div>`s, this exercise often leads to unreliable parsing and broken/unintended interactions.
+>
+> Intelligent agents need richer semantic hints to parse and interact with these pages reliably.
 
 The premise of `AWP` is simple: **include standard information in the HTML page** itself, for **any agent to be able to reliably understand and interact** with it.
 
-For an agent to so, the following information needs to be attached to all *meaninful* and/or *interactive* HTML tags:
+For an agent to so, the following information needs to be attached to *meaninful* and/or *interactive* HTML tags:
 
 1. A `description`, for it to know what it is.
 2. A list of possible `interactions`, for it to know what to do.
 3. A list of `prerequisites`, for it to know what to do prior to interacting.
 4. A list of subsequent `features`, for it to know what those interactions lead to.
 
+Additional optional information such as `states`, or established *accessibility* parameters (eg. `role`, `aria-*`) may also be used to complement the agent's understanding of the page.
+
 #### Contract
 
-With `AWP`, this information is now declared in the HTML itself, through standard `ai-*` parameters.
+Let's start with a simple example. Your agent just found this website by crawling the web:
+
+```html
+<html>
+  <body>
+    <form>
+      This site uses cookies
+      <button>Configure</button>
+    </form>
+    <form>
+      <h1> Website name </h1>
+      <label> What's next? </label>
+      <input
+        type="text"
+        name="destination"
+        required
+        minlength="3"
+        maxlength="30"/>
+      <div>
+        <button disabled> -> </button>
+        <button> Back </button>
+      </div>
+    </form>
+  </body>
+</html>
+```
+
+It now needs to *understand what it is for*, to know if it can be used to answer your query, and if so, *how to interact* with it?
+
+With `AWP`, this information is now declared in the HTML itself, through standard ***optional*** `ai-*` parameters.
 
 Here is a simple example:
 
 ```html
 <html ai-description="Travel site to book flights and trains">
   <body>
+    <form>
+      This site uses cookies
+      <button>Configure</button>
+    </form>
     <form ai-description="Form to book a flight">
-      <h1 ai-description="Form description">
-        Book a flight
+      <h1>
+        Website name
       </h1>
-      <label ai-description="Form query">
-        Where to?
+      <label>
+        What's next?
       </label>
       <input
         ai-ref="<input-ai-ref>"
         ai-description="Form input where to enter the destination"
         ai-interactions="input: enables the form confirmation button, given certain constraints;"
         type="text"
-        id="destination"
         name="destination"
         required
         minlength="3"
-        maxlength="30"
-        size="10" />
+        maxlength="30"/>
       <div>
         <button
           ai-description="Confirmation button to proceed with booking a flight"
@@ -109,7 +150,7 @@ Here is a simple example:
           ai-prerequisite-click="<input-ai-ref>: input destination;"
           ai-next-click="list of available flights; book a flight; login;"
           disabled>
-          See available flights
+          ->
         </button>
         <button
           ai-description="Cancel button to get back to the home page"
@@ -131,9 +172,10 @@ Here is a simple example:
 | `ai-interactions` | A list of possible interactions, for agents to know what to do with the element<br><br>Format:<br><br>`<interaction>: <behavior>; <interaction>: <behavior>;..` | • Meaningful Element: `absent`<br>• Interactive Element: `required`<br>• Other Element: `absent` |
 | `ai-prerequisite-<interaction>` | A list of prerequisite interactions, for agents to know what to do prior to interacting with the element<br><br>Format:<br><br>`<ai-ref>: <interaction>;..` | • Meaningful Element: `absent`<br>• Interactive Element: `optional`<br>• Other Element: `absent` |
 | `ai-ref` | A unique identifier for agents to know where those prerequisite interactions should be made | • Meaningful Element: `absent`<br>• Interactive Element: `optional`<br>• Other Element: `absent` |
-| `ai-next-<interaction>` | A list of subsequent features, for agents to know what those interactions lead to<br><br>Format:<br><br>`<next feature>; <next feature>;..` | • Meaningful Element: `absent`<br>• Interactive Element: `required`<br>• Other Element: `absent` |
+| `ai-next-<interaction>` | A list of subsequent features, for agents to know what those interactions lead to<br><br>Format:<br><br>`<next feature>; <next feature>;..` | • Meaningful Element: `absent`<br>• Interactive Element: `optional`<br>• Other Element: `absent` |
+| `ai-state` | A natural language description of the state the component is in | • Meaningful Element: `optional`<br>• Interactive Element: `optional`<br>• Other Element: `optional` |
 
-> An AWP Tool is also distributed by this library to allow any AI agent to reliably use `AWP` compliant websites.
+> An **AWP Tool** is also distributed by this library to allow any AI agent to reliably use `AWP` compliant websites.
 
 ### APIs
 
@@ -237,17 +279,23 @@ api_doc, logs = AWP().parse_api(url)
 ```html
 <html ai-description="Travel site to book flights and trains">
   <body>
-    <form ai-description="Form to book a flight" class="form-booking-flight">
-      <h1 ai-description="Form description">
+    <form 
+      ai-description="Form to book a flight" 
+      ai-state="pending"
+      class="form-booking-flight">
+      <h1>
         Book a flight
       </h1>
-      <label ai-description="Form query">
+      <label>
         Where to?
       </label>
       <input
         ai-ref="<input-ai-ref>"
         ai-description="Form input where to enter the destination"
         ai-interactions="input: enables the form confirmation button, given certain constraints;"
+        role="destination-input"
+        aria-required="true"
+        alt="destination input"
         type="text"
         id="destination"
         name="destination"
@@ -261,6 +309,7 @@ api_doc, logs = AWP().parse_api(url)
           ai-interactions="click: proceed; hover: diplay additonal information about possible flights;"
           ai-prerequisite-click="<input-ai-ref>: input destination;"
           ai-next-click="list of available flights; book a flight; login;"
+          aria-disabled="true"
           disabled>
           See available flights
         </button>
@@ -280,60 +329,54 @@ api_doc, logs = AWP().parse_api(url)
 
 ```yaml
 elements:
-  - selector: html
-    description: Travel site to book flights and trains
+- selector: html
+  description: Travel site to book flights and trains
+  contains:
+  - selector: html body form.form-booking-flight
+    description: Form to book a flight
+    state: pending
+    content: Book a flight Where to?
     contains:
-      - selector: html body form.form-booking-flight
-        description: Form to book a flight
-        contains:
-          - selector: html body form.form-booking-flight h1
-            description: Form description
-            content: Book a flight
-          - selector: html body form.form-booking-flight label
-            description: Form query
-            content: Where to?
-          - selector: >-
-              html body form.form-booking-flight
-              input#destination[name='destination'][type='text']
-            description: Form input where to enter the destination
-            available_interactions:
-              - type: input
-                description: >-
-                  enables the form confirmation button, given certain
-                  constraints
-            parameters:
-              maxlength: 30
-              minlength: 3
-              name: destination
-              required: true
-              type: text
-          - selector: html body form.form-booking-flight div button
-            description: Confirmation button to proceed with booking a flight
-            content: See available flights
-            available_interactions:
-              - type: click
-                description: proceed
-                prerequisites:
-                  - selector: >-
-                      html body form.form-booking-flight
-                      input#destination[name='destination'][type='text']
-                    interaction: input destination
-                next_features:
-                  - list of available flights
-                  - book a flight
-                  - login
-              - type: hover
-                description: diplay additonal information about possible flights
-          - selector: html body form.form-booking-flight div button:nth-of-type(2)
-            description: Cancel button to get back to the home page
-            content: Back
-            available_interactions:
-              - type: click
-                description: dismiss form and return to home page
-                next_features:
-                  - access forms to book trains
-                  - access forms to book flights
-      
+    - selector: html body form.form-booking-flight input#destination[name='destination'][type='text'][role='destination-input']
+      description: Form input where to enter the destination
+      available_interactions:
+      - type: input
+        description: enables the form confirmation button, given certain constraints
+      attributes:
+        name: destination
+        role: destination-input
+        alt: destination input
+        aria-required: 'true'
+        maxlength: 30
+        minlength: 3
+        required: true
+        type: text
+    - selector: html body form.form-booking-flight div button
+      description: Confirmation button to proceed with booking a flight
+      content: See available flights
+      available_interactions:
+      - type: click
+        description: proceed
+        prerequisites:
+        - selector: html body form.form-booking-flight input#destination[name='destination'][type='text'][role='destination-input']
+          interaction: input destination
+        next_features:
+        - list of available flights
+        - book a flight
+        - login
+      - type: hover
+        description: diplay additonal information about possible flights
+      attributes:
+        aria-disabled: 'true'
+    - selector: html body form.form-booking-flight div button:nth-of-type(2)
+      description: Cancel button to get back to the home page
+      content: Back
+      available_interactions:
+      - type: click
+        description: dismiss form and return to home page
+        next_features:
+        - access forms to book trains
+        - access forms to book flights
 ```
 
 > YAML (default) or JSON per requested format. 
