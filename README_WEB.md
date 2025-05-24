@@ -70,7 +70,7 @@ Learn more about how to support `AWP`, by clicking the most appropriate option f
 >
 > This is commonly done through scrappers and/or vision models aimed at guessing what the agent sees.
 >
-> Websites being diverse, complex, dynamic, Javascript-heavy and often moslty made of generic `<div>`s, this exercise often leads to unreliable parsing and broken/unintended interactions.
+> Websites being diverse, complex, dynamic, Javascript-heavy and often moslty made of generic `<div>`s, this exercise commonly leads to unreliable parsing and broken/unintended interactions.
 >
 > Intelligent agents need richer semantic hints to parse and interact with these pages reliably.
 
