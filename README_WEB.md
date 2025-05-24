@@ -116,9 +116,7 @@ Let's start with a simple example. Your agent just found this website by crawlin
 
 It now needs to *understand what it is for*, to know if it can be used to answer your query, and if so, *how to interact* with it?
 
-With `AWP`, this information is now declared in the HTML itself, through standard ***optional*** `ai-*` parameters.
-
-Here is a simple example:
+With `AWP`, this information is now declared in the HTML itself, through standard ***optional*** `ai-*` attributes.
 
 ```html
 <html ai-description="Travel site to book flights and trains">
@@ -163,6 +161,8 @@ Here is a simple example:
   </body>
 </html>
 ```
+
+> The web app can now be reliably **understood and used by *any* AI agents** 🙌
 
 ##### Standard Parameters
 
