@@ -116,6 +116,8 @@ Let's start with a simple example. Your agent just found this website by crawlin
 
 It now needs to *understand what it is for*, to know if it can be used to answer your query, and if so, *how to interact* with it?
 
+For all reasons described above, this often becomes a difficult and error-prone task —leading to unintended behaviors and imparing the agent's ability to act reliably on our behalf.
+
 With `AWP`, this information is now declared in the HTML itself, through standard ***optional*** `ai-*` attributes.
 
 ```html
@@ -179,7 +181,13 @@ With `AWP`, this information is now declared in the HTML itself, through standar
 
 ### APIs
 
-Without information about what an API is for, how it is structured, what features it provides, and how to interact with it, an AI agent has to figure out everything on its own. This is commonly passed manually as context, fetched via web crawlers attempting to find documentation online, or by spinning up additional middleware servers (eg. [mcp](https://github.com/modelcontextprotocol)) to allow them to be discoverable.
+#### Introduction
+
+> ##### The Challenge of API Interactivity for AI Agents
+>
+> Without information about what an API is for, how it is structured, what features it provides, and how to interact with it, an AI agent has to figure out everything on its own. 
+>
+> This is commonly passed manually as context, fetched via web crawlers attempting to find documentation online, or by spinning up additional middleware servers (eg. [mcp](https://github.com/modelcontextprotocol)) to allow them to be discoverable.
 
 The premise of `AWP` is simple: **include standard information in the API** itself, for **any agent to be able to reliably understand and interact** with it, without requiring additional middleware servers to do so.
 
