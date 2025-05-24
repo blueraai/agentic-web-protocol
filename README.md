@@ -116,7 +116,7 @@ Let's start with a simple example. Your agent just found this website by crawlin
 
 It now needs to *understand what it is for*, to know if it can be used to answer your query, and if so, *how to interact* with it?
 
-For all reasons described above, this often becomes a difficult and error-prone task —leading to unintended behaviors and imparing the agent's ability to act reliably on our behalf.
+For all reasons described above, this often becomes a difficult and error-prone task —leading to unintended behaviors and impairing the agent's ability to act reliably on our behalf.
 
 With `AWP`, this information is now declared in the HTML itself, through standard ***optional*** `ai-*` attributes.
 
