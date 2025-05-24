@@ -216,7 +216,7 @@ Here is a simple example:
 |--------|--------------------------------|----------|----------|----------|----------|----------|
 | `/ai-handshake` | Standard endpoint returning a [OpenAPI](https://swagger.io/specification/) compliant documentation of the API which hosts the endpoint, excluding `/ai-handshake`, JSON or YAML based on headers | REST | GET | Headers:<br><br>`"Content-Type": "application/yaml"`(recommended)<br>or<br>`"Content-Type": "application/json"` | [OpenAPI](https://swagger.io/specification/) compliant documentation, of requested `Content-Type` (eg. YAML, JSON, text) | `required` |
 
-> An AWP Tool is also distributed by this library to allow any AI agent to reliably use `AWP` compliant API.
+> An **AWP Tool** is also distributed by this library to allow any AI agent to reliably use `AWP` compliant API.
 
 </details>
 
