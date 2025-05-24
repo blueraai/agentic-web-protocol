@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://github.com/blueraai/agentic-web-protocol/releases"><img alt="GitHub Release" src="https://img.shields.io/github/release/blueraai/agentic-web-protocol.svg?color=1c4afe"></a>
-    <a href="https://github.com/blueraai/agentic-web-protocol/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/blueraai/agentic-web-protocol.svg?color=00bf48"></a>
+    <a href="https://github.com/blueraai/agentic-web-protocol/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/blueraai/agentic-web-protocol.svg"></a>
     <a href="https://discord.gg/7g9SrEc5yT"><img alt="Discord" src="https://img.shields.io/badge/Join-Discord-7289DA?logo=discord&logoColor=white&color=4911ff"></a>
 </p>
 
