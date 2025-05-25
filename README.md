@@ -439,7 +439,7 @@ If you'd like to support to `agentic-web-protocol` here are a few ways to do so:
 - 👽 Tell your friends and collegues
 - 📰 Support this project on social medias (e.g. LinkedIn, Youtube, Medium, Reddit)
 - ✅ Adopt the `AWP` specification
-- 💪 Use the [AWP Tool](https://pypi.org/project/agentic-web-protocol/)
+- 💪 Use the [AWP Tool](https://pypi.org/project/awp/)
 - 💡 Help surfacing/resolving issues
 - 💭 Help shape the `AWP` specification
 - 🔧 Help maintain, test, enhance the [AWP Tool](https://github.com/blueraai/agentic-web-protocol/blob/main/awp/)
